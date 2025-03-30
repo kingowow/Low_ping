@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.example.wireguard" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>WireGuard Generator</name>
+    <description>A simple WireGuard config generator</description>
+    <author email="you@example.com" href="https://example.com">Your Name</author>
+    <content src="index.html" />
+    <access origin="*" />
+    <platform name="android" />
+</widget>
