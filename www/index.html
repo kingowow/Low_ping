@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WireGuard Generator</title>
+    <style>
+        body {
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding-bottom: 60px; /* فاصله برای دکمه پایین صفحه */
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            width: 60%;
+            margin: auto;
+            border-radius: 10px;
+            margin-top: 50px;
+        }
+        textarea {
+            width: 100%;
+            height: 250px;
+            background-color: #222;
+            color: #0f0;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .generate-btn { background-color: blue; color: white; }
+        .copy-btn { background-color: green; color: white; }
+        .save-btn { background-color: orange; color: white; }
+        .input-box {
+            margin: 10px;
+            padding: 5px;
+            font-size: 14px;
+            width: 80%;
+            text-align: center;
+        }
+        /* استایل‌های صفحه ورود */
+        #loginPage {
+            display: block;
+        }
+        #mainPage {
+            display: none;
+        }
+        #loginContainer {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            width: 40%;
+            margin: auto;
+            border-radius: 10px;
+            margin-top: 100px;
+        }
+        #loginContainer input[type=password] {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            text-align: center;
+            border-radius: 5px;
+            border: none;
+        }
+        #loginContainer button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #27ae60;
+            color: white;
+        }
+        /* استایل دکمه پایین صفحه */
+        .footer-btn {\n            position: fixed;\n            bottom: 10px;\n            left: 50%;\n            transform: translateX(-50%);\n        }
+        .footer-btn button {\n            padding: 10px 20px;\n            font-size: 16px;\n            border: none;\n            cursor: pointer;\n            border-radius: 5px;\n            background-color: #2980b9;\n            color: white;\n        }
+    </style>
+</head>
+<body>
+    <!-- صفحه ورود -->
+    <div id="loginPage">
+        <div id="loginContainer">
+            <h2>ورود</h2>
+            <input type="password" id="password" placeholder="رمز عبور را وارد کنید">
+            <br>
+            <button onclick="checkPassword()">ورود</button>
+        </div>
+    </div>
+
+    <!-- صفحه اصلی -->
+    <div id="mainPage">
+        <div class="container">
+            <h2>تولید کانفیگ WireGuard</h2>
+            <textarea id="configOutput" readonly></textarea><br>
+            <button class="btn generate-btn" onclick="generateConfig()">ساخت کانفیگ</button>
+            <button class="btn copy-btn" onclick="copyToClipboard()">کپی</button>
+            <br>
+            <input type="text" id="fileName" class="input-box" placeholder="نام فایل را وارد کنید (بدون پسوند)"><br>
+            <button class="btn save-btn" onclick="saveToFile()">ذخیره کانفیگ</button>
+        </div>
+    </div>
+
+    <!-- دکمه پایین صفحه -->
+    <div class="footer-btn">
+        <button onclick="window.open('https://t.me/asrnovin_ir', '_blank')">کانال سازنده</button>
+    </div>
+
+    <script>
+        // صفحه ورود
+        function checkPassword() {
+            let password = document.getElementById("password").value;
+            if (password === "kingo") {
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("mainPage").style.display = "block";
+            } else {
+                alert("رمز عبور اشتباه است!");
+            }
+        }
+
+        // توابع اصلی همانند کد اولیه
+        function getRandomIP() {
+            return Math.floor(Math.random() * 255) + "." +
+                   Math.floor(Math.random() * 255) + "." +
+                   Math.floor(Math.random() * 255) + "." +
+                   Math.floor(Math.random() * 255);
+        }
+
+        function getRandomIPv6() {
+            let hex = "0123456789abcdef";
+            let ipv6 = "";
+            for (let i = 0; i < 8; i++) {
+                let part = "";
+                for (let j = 0; j < 4; j++) {
+                    part += hex.charAt(Math.floor(Math.random() * hex.length));
+                }
+                ipv6 += (i === 7) ? part : part + ":";
+            }
+            return ipv6;
+        }
+
+        function getRandomPort() {
+            return Math.floor(Math.random() * (65535 - 1024) + 1024);
+        }
+
+        function getRandomKey() {
+            let array = new Uint8Array(32);
+            window.crypto.getRandomValues(array);
+            return btoa(String.fromCharCode.apply(null, array)).slice(0, 44);
+        }
+
+        function generateDNS() {
+            let dnsList = ["10.202.10.10"];
+            for (let i = 0; i < 40; i++) {
+                dnsList.push(getRandomIP());
+            }
+            for (let i = 0; i < 500; i++) {
+                dnsList.push(getRandomIPv6());
+            }
+            return dnsList.join(", ");
+        }
+
+        function generateConfig() {
+            let privateKey = getRandomKey();
+            let publicKey = getRandomKey();
+            let preSharedKey = getRandomKey();
+            let address = getRandomIP() + "/24";
+            let endpoint = getRandomIP() + ":" + getRandomPort();
+            let dnsServers = generateDNS();
+
+            let config = `[Interface]\nPrivateKey = ${privateKey}\nAddress = ${address}\nDNS = ${dnsServers}\nMTU = 1483\n\n[Peer]\nPublicKey = ${publicKey}\nPresharedKey = ${preSharedKey}\nEndpoint = ${endpoint}\nPersistentKeepalive = 47`;
+
+            document.getElementById("configOutput").value = config;
+        }
+
+        function copyToClipboard() {
+            let textArea = document.getElementById("configOutput");
+            textArea.select();
+            document.execCommand("copy");
+            alert("کانفیگ کپی شد!");
+        }
+
+        function saveToFile() {
+            let text = document.getElementById("configOutput").value;
+            let fileName = document.getElementById("fileName").value.trim();
+            if (fileName === "") {
+                fileName = "wireguard";
+            }
+            let blob = new Blob([text], { type: "text/plain" });
+            let a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName + ".conf"; 
+            a.click();
+        }
+    </script>
+</body>
+</html>
